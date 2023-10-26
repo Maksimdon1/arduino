@@ -5,6 +5,9 @@
 #include <HTTPClient.h>
 #include <Arduino_JSON.h>
 
+#include "EEPROM.h"
+
+
  bool wifi_State = false;
  int32_t frequency = 100;
 const int ledPin1 = 16;
@@ -16,12 +19,13 @@ const int freq = 5000;
 const int ledChannel = 0;
 const int resolution = 8;
 
-
+int addr = 0;
+#define EEPROM_SIZE 1
 
 // Replace with your network credentials
-const char* ssid = "MGTS_GPON_C771";
-const char* password = "qdxSHgHm";
-
+ char* ssid = "MGTS_GPON_C771";
+ char* password = "qdxSHgHm";
+ int32_t value = EEPROM.read(0);
 // www.howsmyssl.com root certificate authority, to verify the server
 // change it to your server root CA
 const char* rootCACertificate= 
@@ -59,6 +63,43 @@ const char* rootCACertificate=
 
 
 void setup() {
+
+
+
+ int n = WiFi.scanNetworks();
+  if (n == 0) {
+        Serial.println("no networks found");
+    }
+    else {
+        Serial.print(n);
+        Serial.println(" networks found");
+        for (int i = 0; i < n; ++i) {
+          
+            if( WiFi.SSID(i) == ssid){
+                Serial.println("1232121");
+                ssid = "MGTS_GPON_C771";
+                password = "qdxSHgHm";
+            }
+            else if(WiFi.SSID(i) == "POCO X5 5G"){
+                 Serial.println("1232121");
+                ssid = "POCO X5 5G";
+                password = "12345689";
+              }
+          
+           
+            delay(10);
+        }
+    }
+
+
+
+
+
+  
+   if (!EEPROM.begin(EEPROM_SIZE))
+  {
+    Serial.println("failed to initialise EEPROM"); delay(1000000);
+  }
    ledcSetup(ledChannel, freq, resolution);
   
   // привязываем канал к портам светодиодов
@@ -67,6 +108,9 @@ void setup() {
   
   pinMode(5, OUTPUT);
   pinMode(ledPin3, OUTPUT);
+   value = EEPROM.read(0);
+     Serial.println(value);
+            digitalWrite(5,value);
   Serial.begin(115200);
   Serial.println();
   // Initialize Wi-Fi
@@ -104,15 +148,19 @@ void setup() {
   }
   wifi_State = true;
   Serial.println(WiFi.localIP());
+ 
+
+    
+
 }
 
 void loop() {
 
   
   if (WiFi.status() != WL_CONNECTED && wifi_State == false){
-    Serial.print(millis());
+
     Serial.println("Reconnecting to WiFi...");
-    WiFi.disconnect();
+   
        digitalWrite(ledPin3,HIGH);
     delay(100);
     digitalWrite(ledPin3,LOW);
@@ -150,7 +198,9 @@ void loop() {
 
     //Initializing an HTTPS communication using the secure client
     Serial.print("[HTTPS] begin...\n");
+ 
     if (https.begin(*client, "https://mains-h5w5.onrender.com/api/house/1")) {  // HTTPS
+        digitalWrite(ledPin3,HIGH);
       Serial.print("[HTTPS] GET...\n");
       // start connection and send HTTP header
       int httpCode = https.GET();
@@ -159,6 +209,7 @@ void loop() {
       // HTTP header has been send and Server response header has been handled
        Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
       // file found at server
+        digitalWrite(ledPin3,LOW);
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
             
            String payload = https.getString();
@@ -173,7 +224,9 @@ void loop() {
                Serial.println(frequency);
             
      Serial.println(x);
-            digitalWrite(5,x);
+      EEPROM.write(0, x);
+       value = EEPROM.read(0);
+            digitalWrite(5,value);
 
            
         }
