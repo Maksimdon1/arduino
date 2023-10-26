@@ -6,6 +6,16 @@
 #include <Arduino_JSON.h>
 
  bool wifi_State = false;
+ int32_t frequency = 100;
+const int ledPin1 = 16;
+const int ledPin2 = 17;
+const int ledPin3 = 4;
+
+// задаём свойства ШИМ-сигнала
+const int freq = 5000;
+const int ledChannel = 0;
+const int resolution = 8;
+
 
 
 // Replace with your network credentials
@@ -49,7 +59,14 @@ const char* rootCACertificate=
 
 
 void setup() {
-    pinMode(5, OUTPUT);
+   ledcSetup(ledChannel, freq, resolution);
+  
+  // привязываем канал к портам светодиодов
+
+
+  
+  pinMode(5, OUTPUT);
+  pinMode(ledPin3, OUTPUT);
   Serial.begin(115200);
   Serial.println();
   // Initialize Wi-Fi
@@ -58,7 +75,32 @@ void setup() {
   Serial.print("Connecting to WiFi ..");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print('.');
-    delay(1000);
+    digitalWrite(ledPin3,HIGH);
+    delay(100);
+    digitalWrite(ledPin3,LOW);
+    delay(100);
+    digitalWrite(ledPin3,HIGH);
+    delay(100);
+    digitalWrite(ledPin3,LOW);
+    delay(100);
+    digitalWrite(ledPin3,HIGH);
+    delay(100);
+    digitalWrite(ledPin3,LOW);
+    delay(100);
+     digitalWrite(ledPin3,HIGH);
+    delay(100);
+    digitalWrite(ledPin3,LOW);
+    delay(100);
+     digitalWrite(ledPin3,HIGH);
+    delay(100);
+    digitalWrite(ledPin3,LOW);
+    delay(100);
+   
+   
+   
+
+
+
   }
   wifi_State = true;
   Serial.println(WiFi.localIP());
@@ -67,7 +109,7 @@ void setup() {
 void loop() {
 
   
-  if ((WiFi.status() != WL_CONNECTED) &&(wifi_State =! true)){
+  if (WiFi.status() != WL_CONNECTED && wifi_State == false){
     Serial.print(millis());
     Serial.println("Reconnecting to WiFi...");
     WiFi.disconnect();
@@ -121,6 +163,10 @@ void loop() {
             Serial.println(myObject[0]);
             Serial.println(myObject[0]["State"]);
             int32_t x = myObject[0]["State"];
+      
+              frequency = myObject[0]["frequency"];
+               Serial.println(frequency);
+            
      Serial.println(x);
             digitalWrite(5,x);
 
@@ -138,5 +184,5 @@ void loop() {
   }
   Serial.println();
   Serial.println("Waiting 2min before the next round...");
-  delay(3000);
+  delay(frequency);
 }
